@@ -37,8 +37,7 @@
     if ( preg_match("/[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/",$ip) === 1 ) {
       $st->execute();
       if ( $row=$st->fetch(PDO::FETCH_BOTH) ) {
-        #printf("%-15s %2s %-30s %s\n",$ip,$row[0],$row[1],gethostbyaddr($ip));
-        printf("%-15s %2s %-30s %s\n",$ip,$row[0],$row[1],"");
+        printf("%-15s %2s %-30s %s\n",$ip,$row[0],$row[1],gethostbyaddr($ip));
       } else {
         printf("%-15s %2s %-30s\n",$ip,"NF","NOT FOUND");
       }
