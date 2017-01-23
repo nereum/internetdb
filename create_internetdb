@@ -1,0 +1,141 @@
+#!/bin/bash
+#
+# 2017-01-22 Nereu version using CentoS7/Mariadb
+
+function PAUSE {
+  echo
+  /bin/echo -e "Press ENTER to continue or CTRL-C to cancel...\c" ; read junk
+  echo
+}
+
+DBNAME="internetdb"
+
+echo
+echo "This script will create and load \"$DBNAME\" database."
+echo "If the database already exist, it will backup it first and then recreate it"
+
+PAUSE
+
+echo ". Change work directory to /tmp and clean up temporary files"
+
+cd /tmp
+
+rm -f all-zones.tar.gz *.zone all.txt country_codes.csv $DBNAME.sql.gz
+
+PAUSE
+
+echo ". Backup database"
+
+mysql $DBNAME -e 'select 1' >/dev/null && mysqldump $DBNAME | gzip -v >$DBNAME.sql.gz
+
+PAUSE
+
+echo ". [Re-]creating database and tables"
+echo
+
+mysql <<EOF
+
+drop database if exists $DBNAME;
+
+create database $DBNAME;
+
+use $DBNAME;
+
+CREATE TABLE countries (
+  country varchar(2) NOT NULL DEFAULT '',
+  name varchar(255) DEFAULT NULL,
+  PRIMARY KEY (country)
+);
+
+CREATE TABLE networks (
+  country varchar(2) DEFAULT NULL,
+  network_cidr varchar(25) DEFAULT NULL,
+  network varchar(20) DEFAULT NULL,
+  broadcast varchar(20) DEFAULT NULL,
+  start_ip varchar(20) DEFAULT NULL,
+  end_ip varchar(20) DEFAULT NULL,
+  inetwork int(10) unsigned DEFAULT NULL,
+  ibroadcast int(10) unsigned DEFAULT NULL,
+  istart_ip int(10) unsigned DEFAULT NULL,
+  iend_ip int(10) unsigned DEFAULT NULL,
+  KEY start_end (istart_ip,iend_ip)
+);
+
+show tables;
+
+EOF
+
+PAUSE
+
+echo ". Download all-zones"
+
+curl 'http://www.ipdeny.com/ipblocks/data/countries/all-zones.tar.gz' >all-zones.tar.gz
+
+tar -zxf all-zones.tar.gz \*.zone 
+
+for f in $(ls *.zone)
+do
+  country=$(echo $f | sed -e 's/\.zone//')
+  sed -e "s/^/${country} /" <$f
+done >all.txt
+
+chmod 644 /tmp/all.txt
+
+PAUSE
+
+echo ". Loading table [networks]..."
+echo
+
+mysql $DBNAME <<EOF
+load data local infile '/tmp/all.txt'
+into table networks
+fields terminated by ' '
+( @country, @network_cidr )
+set
+ country      = @country                                                                                                                       ,
+ network_cidr = @network_cidr                                                                                                                  ,
+ network      = inet_ntoa( inet_aton(substring_index(@network_cidr,'/',1)) )                                                                   ,
+ broadcast    = inet_ntoa( inet_aton(substring_index(@network_cidr,'/',1)) + ~(~((1 << (32 - substring_index(@network_cidr,'/',-1))) - 1)))    ,
+ start_ip     = inet_ntoa( inet_aton(substring_index(@network_cidr,'/',1)) + 1 )                                                               ,
+ end_ip       = inet_ntoa( inet_aton(substring_index(@network_cidr,'/',1)) + ~(~((1 << (32 - substring_index(@network_cidr,'/',-1))) - 1)) - 1),
+ inetwork     =            inet_aton(substring_index(@network_cidr,'/',1))                                                                     ,
+ ibroadcast   =            inet_aton(substring_index(@network_cidr,'/',1)) + ~(~((1 << (32 - substring_index(@network_cidr,'/',-1))) - 1))     ,
+ istart_ip    =            inet_aton(substring_index(@network_cidr,'/',1)) + 1                                                                 ,
+ iend_ip      =            inet_aton(substring_index(@network_cidr,'/',1)) + ~(~((1 << (32 - substring_index(@network_cidr,'/',-1))) - 1)) - 1
+;
+
+select count(*) from networks;
+EOF
+
+PAUSE
+
+echo ". Download country_codes.csv"
+
+curl 'https://raw.githubusercontent.com/datasets/country-list/master/data.csv' >country_codes.csv
+chmod 644 /tmp/country_codes.csv
+
+PAUSE
+
+echo ". Loading table [countries]..."
+echo
+
+mysql $DBNAME <<EOF
+
+load data local infile '/tmp/country_codes.csv' 
+into table countries 
+fields terminated by ',' optionally enclosed by '\"' ignore 1 lines 
+(name,country)
+;
+
+select count(*) from countries;
+
+EOF
+
+PAUSE
+
+echo ". Clean up temporary files"
+echo
+
+rm -f *.zone all.txt
+
+echo ". Finished."
