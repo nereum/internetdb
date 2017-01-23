@@ -77,5 +77,5 @@ Press ENTER to continue or CTRL-C to cancel...
 
 # How to use check_ip to check for an IP address
 
-$ ./check_ip 172.217.28.100
+$ ./check_ip 172.217.28.100<br>
 172.217.28.100  us United States                  gru06s09-in-f4.1e100.net
