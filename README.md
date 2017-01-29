@@ -6,14 +6,14 @@ MySQL database with all Internet network addresses - definitions and load script
 The script "create_internetdb" will make all the steps necessary to create a MySQL database with two tables:<br>
 <ul>
 <li>networks
-<li>contries
+<li>countries
 </ul>
 
 The "networks" table store all the Internet networks associated with the country code.<br>
 All the data is provided by IPdeny (http://www.ipdeny.com/).<br>
 
 The "countries" table provides the country code and theirs names. I'm using the information provided by Wikipaedia
-about ISO 3166-1 (https://en.wikipedia.org/wiki/ISO_3166-1).<br> 
+about ISO 3166-1 (https://en.wikipedia.org/wiki/ISO_3166-1) and create and load the file iso31661.txt(also included).<br> 
 
 Adittionaly there is a script in PHP (php-cli) that return the network information of one or a list of IPs.<br>
 
