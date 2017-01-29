@@ -30,19 +30,29 @@ To create the database and populate it, just run the bash script "create_interne
 Follow the output of the script<br>
 
 <pre>
-$ ./create_internetdb
+ ./create_internetdb
 
 This script will create and load "internetdb" database.
 If the database already exist, it will backup it first and then recreate it
 
 Press ENTER to continue or CTRL-C to cancel...
 
-. Change work directory to /tmp and clean up temporary files
+. Backup database
+ 78.1%
+
+Press ENTER to continue or CTRL-C to cancel...^C
+[root@mail internetdb]# vi create_internetdb
+[root@mail internetdb]# ./c^C
+[root@mail internetdb]# clear
+[root@mail internetdb]# ./create_internetdb
+
+This script will create and load "internetdb" database.
+If the database already exist, it will backup it first and then recreate it
 
 Press ENTER to continue or CTRL-C to cancel...
 
 . Backup database
- 79.0%
+ 78.1%
 
 Press ENTER to continue or CTRL-C to cancel...
 
@@ -50,6 +60,7 @@ Press ENTER to continue or CTRL-C to cancel...
 
 Tables_in_internetdb
 countries
+countries_iso31661
 networks
 
 Press ENTER to continue or CTRL-C to cancel...
@@ -57,28 +68,21 @@ Press ENTER to continue or CTRL-C to cancel...
 . Download all-zones
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100  542k  100  542k    0     0   189k      0  0:00:02  0:00:02 --:--:--  189k
+100  542k  100  542k    0     0   224k      0  0:00:02  0:00:02 --:--:--  241k
 
 Press ENTER to continue or CTRL-C to cancel...
 
 . Loading table [networks]...
 
 count(*)
-171918
-
-Press ENTER to continue or CTRL-C to cancel...
-
-. Download country_codes.csv
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100  3870  100  3870    0     0   5056      0 --:--:-- --:--:-- --:--:--  5065
+172101
 
 Press ENTER to continue or CTRL-C to cancel...
 
 . Loading table [countries]...
 
 count(*)
-249
+252
 
 Press ENTER to continue or CTRL-C to cancel...
 
