@@ -1,24 +1,35 @@
+
 # internetdb
-MySQL database with all Internet network addresses - definitions and load script
+MySQL database with all Internet network addresses - definitions and load script<br>
 
-Instructions
-The script create_internetdb will make all the steps necessay to create a MySQL database with two tables:
-networks
-contries
+<b>Instructions</b><br>
+The script "create_internetdb" will make all the steps necessary to create a MySQL database with two tables:<br>
+<ul>
+<li>networks
+<li>contries
+</ul>
 
-The "networks" table store all the Internet networks associated with the country code. 
-I'm using te information provided by IPdeny (http://www.ipdeny.com/). 
+The "networks" table store all the Internet networks associated with the country code.<br>
+All the data is provided by IPdeny (http://www.ipdeny.com/).<br>
 
-The "countries" table provides the country code and theirs names.
+The "countries" table provides the country code and theirs names. I'm using the information provided by Wikipaedia
+about ISO 3166-1 (https://en.wikipedia.org/wiki/ISO_3166-1).<br> 
 
-Adittionaly there is a script in PHP (php-cli) that return the country information of one or a list of IPs.
+Adittionaly there is a script in PHP (php-cli) that return the network information of one or a list of IPs.<br>
 
-The script has the follow assumptions:
-. is possible connect without password with user root (probably this will not e true in many installations)
-. there is Internet access to get network blocks and countries using curl
+The scripts have the follow assumptions:<br>
+<ul>
+<li> is possible connect without password with user root (probably this will not e true in many installations)
+<li> there is Internet access to get network blocks and countries using curl
+</ul>
 
-# Output
+<b>Usage</b><br>
 
+To create the database and populate it, just run the bash script "create_internetdb". The script will stop at every major step of the process (create database, create table, download files, load the files etc).<br>
+
+Follow the output of the script<br>
+
+<pre>
 $ ./create_internetdb
 
 This script will create and load "internetdb" database.
@@ -74,8 +85,12 @@ Press ENTER to continue or CTRL-C to cancel...
 . Clean up temporary files
 
 . Finished.
+</pre>
 
-# How to use check_ip to check for an IP address
+Once the database created and populated is possbile to query it directly or use the php-cli script "check_ip".<br>
+Follow an examle of how to check an IP using the script:<br>
 
-$ ./check_ip 172.217.28.100<br>
+<pre>
+$ ./check_ip 172.217.28.100
 172.217.28.100  us United States                  gru06s09-in-f4.1e100.net
+</pre>
