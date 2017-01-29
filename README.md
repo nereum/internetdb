@@ -15,18 +15,18 @@ All the data is provided by IPdeny (http://www.ipdeny.com/).<br>
 The "countries" table provides the country code and theirs names. I'm using the information provided by Wikipedia
 about ISO 3166-1 (https://en.wikipedia.org/wiki/ISO_3166-1) and create and load the file iso31661.txt(also included).<br> 
 
-Adittionaly there is a script in PHP (php-cli) that return the network information of one or a list of IPs.<br>
+Adittionaly there is a script in PHP (php-cli) that can be used to return the network information of given IP or a list of IPs.<br>
 
-The scripts have the follow assumptions:<br>
+All the scripts have the follow assumptions:<br>
 <ul>
 <li> there is a MySQL database and client available;
 <li> is possible connect without password with user root (probably this will not e true in many installations);
-<li> there is Internet access to get network blocks and countries using curl.
+<li> there is an Internet access to get the network addresses by downloading the file all-zones.tar.gz from www.ipdeny.com.
 </ul>
 
 <b>Usage</b><br>
 
-To create the database and populate it, just run the bash script "create_internetdb". The script will stop at every major step of the process (create database, create table, download files, load the files etc).<br>
+To create the database and populate it, just run the bash script "create_internetdb". The script will stop at every major step of the process (create database, create table, download files, load the files etc) allowing to check its output and stop it if necessary.<br>
 
 <b>Output of the script</b><br>
 
