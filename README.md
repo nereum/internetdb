@@ -78,8 +78,8 @@ Press ENTER to continue or CTRL-C to cancel...
 . Finished.
 </pre>
 
-Once the database created and populated is possbile to query it directly or use the php-cli script "check_ip".<br>
-Follow an examle of how to check an IP using the script:<br>
+Once the database is created and populated is possbile to query it directly or use the php-cli script "check_ip".<br>
+Follow an examle of how to check an IP using this script:<br>
 
 <pre>
 $ ./check_ip 172.217.28.100
