@@ -14,13 +14,7 @@ echo
 echo "This script will create and load \"$DBNAME\" database."
 echo "If the database already exist, it will backup it first and then recreate it"
 
-PAUSE
-
-echo ". Change work directory to /tmp and clean up temporary files"
-
-cd /tmp
-
-rm -f all-zones.tar.gz *.zone all.txt country_codes.csv $DBNAME.sql.gz
+rm -f *.zone all.txt
 
 PAUSE
 
@@ -37,29 +31,38 @@ mysql <<EOF
 
 drop database if exists $DBNAME;
 
-create database $DBNAME;
+create database $DBNAME default charset=utf8;
 
 use $DBNAME;
 
-CREATE TABLE countries (
-  country varchar(2) NOT NULL DEFAULT '',
-  name varchar(255) DEFAULT NULL,
-  PRIMARY KEY (country)
+create table countries (
+ id      int          not null auto_increment primary key,
+ country varchar(2)   not null unique key,
+ name    varchar(255) not null
 );
 
-CREATE TABLE networks (
-  country varchar(2) DEFAULT NULL,
-  network_cidr varchar(25) DEFAULT NULL,
-  network varchar(20) DEFAULT NULL,
-  broadcast varchar(20) DEFAULT NULL,
-  start_ip varchar(20) DEFAULT NULL,
-  end_ip varchar(20) DEFAULT NULL,
-  inetwork int(10) unsigned DEFAULT NULL,
-  ibroadcast int(10) unsigned DEFAULT NULL,
-  istart_ip int(10) unsigned DEFAULT NULL,
-  iend_ip int(10) unsigned DEFAULT NULL,
-  KEY start_end (istart_ip,iend_ip)
+create table networks (
+  id           int         not null auto_increment primary key,
+  country      varchar(2)  not null,
+  network_cidr varchar(25) not null,
+  network      varchar(20) not null,
+  broadcast    varchar(20) not null,
+  start_ip     varchar(20) not null,
+  end_ip       varchar(20) not null,
+  inetwork     int(10) unsigned not null,
+  ibroadcast   int(10) unsigned not null,
+  istart_ip    int(10) unsigned not null,
+  iend_ip      int(10) unsigned not null,
+  key start_end (istart_ip,iend_ip)
 );
+
+create table countries_iso31661 (
+ id           int          not null auto_increment primary key,
+ english_name varchar(255) not null,
+ alpha2       varchar(2)   not null unique key,
+ alpha3       varchar(3)   not null,
+ numeric_code varchar(3)   not null
+) character set utf8;
 
 show tables;
 
@@ -79,15 +82,13 @@ do
   sed -e "s/^/${country} /" <$f
 done >all.txt
 
-chmod 644 /tmp/all.txt
-
 PAUSE
 
 echo ". Loading table [networks]..."
 echo
 
 mysql $DBNAME <<EOF
-load data local infile '/tmp/all.txt'
+load data local infile 'all.txt'
 into table networks
 fields terminated by ' '
 ( @country, @network_cidr )
@@ -109,25 +110,46 @@ EOF
 
 PAUSE
 
-echo ". Download country_codes.csv"
-
-curl 'https://raw.githubusercontent.com/datasets/country-list/master/data.csv' >country_codes.csv
-chmod 644 /tmp/country_codes.csv
-
-PAUSE
-
 echo ". Loading table [countries]..."
 echo
 
 mysql $DBNAME <<EOF
 
-load data local infile '/tmp/country_codes.csv' 
-into table countries 
-fields terminated by ',' optionally enclosed by '\"' ignore 1 lines 
-(name,country)
+# ISO 3166-1
+# https://en.wikipedia.org/wiki/ISO_3166-1
+
+set session character_set_results=utf8;
+
+load data local infile 'iso31661.tab' 
+into table countries_iso31661 
+character set utf8
+fields terminated by '\t'  
+(@english_name,@alpha2,@alpha3,@numeric_code)
+set
+english_name=@english_name,
+alpha2=lower(@alpha2),
+alpha3=lower(@alpha3),
+numeric_code=@numeric_code
 ;
 
+drop table if exists countries;
+create table countries (
+ id      int          not null auto_increment primary key,
+ country varchar(2)   not null unique key, 
+ name    varchar(255) not null
+);
+
+insert into countries ( country, name ) select alpha2, english_name from countries_iso31661 order by english_name;
+
+# Exceptions
+# Ver: https://en.wikipedia.org/wiki/Country_code_top-level_domain
+insert into countries (country, name) values
+('ap','Asia Pacific'),
+('eu','European Union'),
+('uk','United Kingdom');
+
 select count(*) from countries;
+select * from ( select country code, count(*) n from networks group by country ) c left outer join countries i on c.code=i.country  where i.country is null;
 
 EOF
 
