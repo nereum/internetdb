@@ -1,33 +1,54 @@
 #!/bin/bash
 #
 # 2017-01-22 Nereu version using CentoS7/Mariadb
+# 2017-08-08 Nereu cleaning the code
 
-function PAUSE {
-  echo
-  /bin/echo -e "Press ENTER to continue or CTRL-C to cancel...\c" ; read junk
-  echo
-}
+###
 
+MYSQL_USER="root"
+MYSQL_PASS=""
 DBNAME="internetdb"
 
-echo
-echo "This script will create and load \"$DBNAME\" database."
-echo "If the database already exist, it will backup it first and then recreate it"
+### 
 
-rm -f *.zone all.txt
+function PAUSE {
+  printf "\n  Press ENTER to continue or CTRL-C to cancel..." ; read junk
+}
+
+function ECHO {
+  printf "\n%s\n\n" "$*"
+}
+
+### Main
+
+clear 
+
+ECHO ". internetdb"
+
+if mysql --user="${MYSQL_USER}" --password="${MYSQL_PASS}" -e 'select 1' >/dev/null 2>&1
+then
+  ECHO ". MySQL avaliable"
+else
+  ECHO ". ERROR: Check MySQL user/password" 
+  echo "  Change variables MYSQL_USER and MYSQL_PASS"
+  exit 1
+fi
+
+ECHO ". This script will (re-)create and load \"$DBNAME\" database"
 
 PAUSE
 
-echo ". Backup database"
+ECHO ". Backup database"
 
-mysql $DBNAME -e 'select 1' >/dev/null && mysqldump $DBNAME | gzip -v >$DBNAME.sql.gz
+mysql --user="${MYSQL_USER}" --password="${MYSQL_PASS}" --database=${DBNAME} -e 'select 1' >/dev/null 2>&1 && \
+mysqldump --user="${MYSQL_USER}" --password="${MYSQL_PASS}" --databases ${DBNAME} | \
+gzip -v >${DBNAME}.sql.gz
 
 PAUSE
 
-echo ". [Re-]creating database and tables"
-echo
+ECHO ". [Re-]creating database and tables"
 
-mysql <<EOF
+mysql --user="${MYSQL_USER}" --password="${MYSQL_PASS}" --database=${DBNAME} <<EOF
 
 drop database if exists $DBNAME;
 
@@ -64,13 +85,13 @@ create table countries_iso31661 (
  numeric_code varchar(3)   not null
 ) character set utf8;
 
-show tables;
-
 EOF
 
 PAUSE
 
-echo ". Download all-zones"
+ECHO ". Download all-zones"
+
+rm -f *.zone all.txt
 
 curl 'http://www.ipdeny.com/ipblocks/data/countries/all-zones.tar.gz' >all-zones.tar.gz
 
@@ -84,10 +105,9 @@ done >all.txt
 
 PAUSE
 
-echo ". Loading table [networks]..."
-echo
+ECHO ". Loading table [networks]..."
 
-mysql $DBNAME <<EOF
+mysql --user="${MYSQL_USER}" --password="${MYSQL_PASS}" --database=${DBNAME} <<EOF
 load data local infile 'all.txt'
 into table networks
 fields terminated by ' '
@@ -105,13 +125,12 @@ set
  iend_ip      =            inet_aton(substring_index(@network_cidr,'/',1)) + ~(~((1 << (32 - substring_index(@network_cidr,'/',-1))) - 1)) - 1
 ;
 
-select count(*) from networks;
+select count(*) as " Rows in networks table" from networks;
 EOF
 
 PAUSE
 
-echo ". Loading table [countries]..."
-echo
+ECHO ". Loading tables [countries_iso31661] and [countries]..."
 
 mysql $DBNAME <<EOF
 
@@ -132,13 +151,6 @@ alpha3=lower(@alpha3),
 numeric_code=@numeric_code
 ;
 
-drop table if exists countries;
-create table countries (
- id      int          not null auto_increment primary key,
- country varchar(2)   not null unique key, 
- name    varchar(255) not null
-);
-
 insert into countries ( country, name ) select alpha2, english_name from countries_iso31661 order by english_name;
 
 # Exceptions
@@ -148,16 +160,16 @@ insert into countries (country, name) values
 ('eu','European Union'),
 ('uk','United Kingdom');
 
-select count(*) from countries;
+select count(*) as " Rows in countries table" from countries;
+
 select * from ( select country code, count(*) n from networks group by country ) c left outer join countries i on c.code=i.country  where i.country is null;
 
 EOF
 
 PAUSE
 
-echo ". Clean up temporary files"
-echo
+ECHO ". Clean up temporary files"
 
 rm -f *.zone all.txt
 
-echo ". Finished."
+ECHO ". Finished"
