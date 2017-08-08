@@ -6,9 +6,9 @@ MySQL database with all Internet network addresses - definitions and load script
 
 The script "create_internetdb" will make all the steps necessary to create a MySQL database with three tables:<br>
 
-. networks
-. countries
-. countries_iso31661
+ * networks
+ * countries
+ * countries_iso31661
 
 The "networks" table store all the Internet networks associated with the country code.
 
