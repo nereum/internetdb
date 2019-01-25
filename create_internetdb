@@ -48,7 +48,7 @@ PAUSE
 
 ECHO ". [Re-]creating database and tables"
 
-mysql --user="${MYSQL_USER}" --password="${MYSQL_PASS}" --database=${DBNAME} <<EOF
+mysql -v -v --user="${MYSQL_USER}" --password="${MYSQL_PASS}" <<EOF
 
 drop database if exists $DBNAME;
 
@@ -107,7 +107,7 @@ PAUSE
 
 ECHO ". Loading table [networks]..."
 
-mysql --user="${MYSQL_USER}" --password="${MYSQL_PASS}" --database=${DBNAME} <<EOF
+mysql --user="${MYSQL_USER}" --password="${MYSQL_PASS}" --database="${DBNAME}" <<EOF
 load data local infile 'all.txt'
 into table networks
 fields terminated by ' '
@@ -132,7 +132,7 @@ PAUSE
 
 ECHO ". Loading tables [countries_iso31661] and [countries]..."
 
-mysql $DBNAME <<EOF
+mysql --user="${MYSQL_USER}" --password="${MYSQL_PASS}" --database=${DBNAME}  <<EOF
 
 # ISO 3166-1
 # https://en.wikipedia.org/wiki/ISO_3166-1
